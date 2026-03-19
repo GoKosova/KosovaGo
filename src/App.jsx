@@ -238,8 +238,7 @@ export default function KosovaGoLandingPage() {
           </div>
         </div>
       </section>
-      </section>
-
+      
 <footer className="mx-auto max-w-7xl px-6 pb-10 text-center text-xs text-slate-500">
   For any enquiries please contact us at{" "}
   <a
