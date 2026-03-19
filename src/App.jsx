@@ -217,7 +217,7 @@ export default function KosovaGoLandingPage() {
               Coming soon
             </p>
             <h2 className="mt-3 text-3xl font-bold sm:text-5xl">
-              Launching soon on mobile and web
+              Launching soon on mobile
             </h2>
 
             <div className="mt-8 flex flex-col gap-4 sm:flex-row">
