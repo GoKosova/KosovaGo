@@ -238,6 +238,18 @@ export default function KosovaGoLandingPage() {
           </div>
         </div>
       </section>
-    </div>
-  );
+      </section>
+
+<footer className="mx-auto max-w-7xl px-6 pb-10 text-center text-xs text-slate-500">
+  For any enquiries please contact us at{" "}
+  <a
+    href="mailto:gokosova@outlook.com"
+    className="text-emerald-400 hover:underline"
+  >
+    gokosova@outlook.com
+  </a>
+</footer>
+
+</div>
+);
 }
