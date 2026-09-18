@@ -1,134 +1,89 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import "./index.css";
 
-const categories = ["Destinations", "Events", "Food", "Nightlife"];
-
-const discovery = {
-  Destinations: [
-    { city: "Prizren", title: "Stone Bridge", meta: "Historic landmark", badge: "Must see", tone: "prizren" },
-    { city: "Peja", title: "Rugova Gorge", meta: "Mountains & outdoors", badge: "Explore", tone: "rugova" },
-    { city: "Prishtina", title: "NEWBORN Monument", meta: "Culture & city life", badge: "Popular", tone: "prishtina" },
-    { city: "Deçan", title: "Deçan Monastery", meta: "Heritage & history", badge: "Historic", tone: "decan" },
-  ],
-  Events: [
-    { city: "Across Kosovo", title: "Concerts & festivals", meta: "Current listings in one place", badge: "Updated", tone: "events" },
-    { city: "Prishtina", title: "Tonight in the city", meta: "Live music, culture & more", badge: "Tonight", tone: "tonight" },
-    { city: "Kosovo", title: "Sports fixtures", meta: "Football, basketball & volleyball", badge: "Live", tone: "sports" },
-    { city: "Your city", title: "Weekend planner", meta: "See what is happening nearby", badge: "Discover", tone: "weekend" },
-  ],
-  Food: [
-    { city: "Local favourite", title: "Flija", meta: "Traditional layered dish", badge: "Taste", tone: "flija" },
-    { city: "Across Kosovo", title: "Qebapa", meta: "A classic worth seeking out", badge: "Local", tone: "qebapa" },
-    { city: "Prishtina", title: "Coffee culture", meta: "Cafés, brunch and bakeries", badge: "Trending", tone: "coffee" },
-    { city: "Your location", title: "Restaurants nearby", meta: "Browse by mood and cuisine", badge: "Near you", tone: "restaurant" },
-  ],
-  Nightlife: [
-    { city: "Prishtina", title: "Clubs & late nights", meta: "Find the right atmosphere", badge: "Tonight", tone: "clubs" },
-    { city: "Prizren", title: "Bars by the river", meta: "Relaxed evenings and music", badge: "Popular", tone: "bars" },
-    { city: "Across Kosovo", title: "Live music", meta: "Gigs, DJs and performances", badge: "Live", tone: "music" },
-    { city: "Your plans", title: "Save for later", meta: "Build your own night out", badge: "Favourites", tone: "saved" },
-  ],
+const shot="/kosovago-app-home.png";
+const photos={
+  prishtina:"https://st4.depositphotos.com/19085394/38168/i/450/depositphotos_381687300-stock-photo-prishtina-kosovo-september-2019-sunset.jpg",
+  prizren:"https://www.gidilirmi.co/soul/prizren.jpg",
+  peja:"https://airial.travel/_next/image?q=80&url=https%3A%2F%2Fmedia-cdn.tripadvisor.com%2Fmedia%2Fphoto-w%2F06%2F25%2Fc0%2Fe4%2Frugova-canyon.jpg&w=1920",
+  gjakova:"https://www.travelsewhere.net/wp-content/uploads/2020/08/DSC_0276-1.jpg",
+  mitrovica:"https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?auto=format&fit=crop&w=1400&q=80",
+  gjilan:"https://images.unsplash.com/photo-1529253355930-ddbe423a2ac7?auto=format&fit=crop&w=1400&q=80",
+  ferizaj:"https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1400&q=80",
+  suhareka:"https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1400&q=80",
+  vushtrri:"https://images.unsplash.com/photo-1564507592333-c60657eea523?auto=format&fit=crop&w=1400&q=80",
+  malisheva:"https://images.unsplash.com/photo-1432405972618-c60b0225b8f9?auto=format&fit=crop&w=1400&q=80"
 };
-
-const cities = ["Prishtina", "Prizren", "Peja", "Gjakova", "Mitrovica", "Gjilan"];
-
-function BrandMark({ compact = false }) {
-  return <div className={`brand-mark ${compact ? "brand-mark--compact" : ""}`} aria-label="KosovaGo"><span className="brand-map">◆</span><span className="brand-g">G</span></div>;
-}
-
-function Icon({ name }) {
-  const paths = {
-    compass: <><circle cx="12" cy="12" r="9"/><path d="m15.2 8.8-2.1 4.3-4.3 2.1 2.1-4.3 4.3-2.1Z"/></>,
-    calendar: <><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></>,
-    heart: <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21l7.7-7.5 1.1-1.1a5.5 5.5 0 0 0 0-7.8Z"/>,
-    pin: <><path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></>,
-    arrow: <><path d="M5 12h14M13 6l6 6-6 6"/></>,
-    search: <><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></>,
-  };
-  return <svg viewBox="0 0 24 24" aria-hidden="true">{paths[name]}</svg>;
-}
-
-export default function KosovaGoLandingPage() {
-  const [activeCategory, setActiveCategory] = useState("Destinations");
-  const [email, setEmail] = useState("");
-  const [status, setStatus] = useState("idle");
-  const [menuOpen, setMenuOpen] = useState(false);
-  const activeCards = useMemo(() => discovery[activeCategory], [activeCategory]);
-
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    const cleanEmail = email.trim();
-    if (!cleanEmail || status === "loading") return;
-    setStatus("loading");
-    try {
-      const payload = (templateId) => ({ service_id: "service_8m7b6ng", template_id: templateId, user_id: "9_B6qxEZcglmkiKlb", template_params: { user_email: cleanEmail } });
-      const responses = await Promise.all([
-        fetch("https://api.emailjs.com/api/v1.0/email/send", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload("template_v9e7z3r")) }),
-        fetch("https://api.emailjs.com/api/v1.0/email/send", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload("template_sqphrdq")) }),
-      ]);
-      if (responses.some((response) => !response.ok)) throw new Error("Email service request failed");
-      setEmail(""); setStatus("sent");
-    } catch (error) { console.error(error); setStatus("error"); }
-  };
-
-  return (
-    <div className="site-shell">
-      <header className="nav-shell">
-        <a href="#top" className="wordmark"><BrandMark compact /><span>KosovaGo</span></a>
-        <button className="menu-button" onClick={() => setMenuOpen(!menuOpen)} aria-label="Toggle menu">{menuOpen ? "Close" : "Menu"}</button>
-        <nav className={menuOpen ? "nav-links nav-links--open" : "nav-links"}>
-          <a href="#discover" onClick={() => setMenuOpen(false)}>Discover</a><a href="#cities" onClick={() => setMenuOpen(false)}>Cities</a><a href="#about" onClick={() => setMenuOpen(false)}>About</a><a className="nav-cta" href="#waitlist" onClick={() => setMenuOpen(false)}>Get early access</a>
-        </nav>
-      </header>
-
-      <main id="top">
-        <section className="hero section-wrap">
-          <div className="hero-copy">
-            <div className="eyebrow"><span className="pulse-dot" /> Built for tourists and locals</div>
-            <h1>Kosovo,<br/><span>all in one place.</span></h1>
-            <p>Discover where to go, what to eat and what is happening—without jumping between outdated blogs and scattered social posts.</p>
-            <div className="hero-actions"><a className="button button--gold" href="#discover">Explore KosovaGo <Icon name="arrow" /></a><a className="button button--ghost" href="#waitlist">Join the waitlist</a></div>
-            <div className="trust-row"><div className="avatar-stack"><span>PR</span><span>PZ</span><span>PE</span></div><p><strong>One country. Every experience.</strong><br/>Designed with local knowledge.</p></div>
-          </div>
-          <div className="phone-stage" aria-label="KosovaGo app preview">
-            <div className="orbit orbit--one"/><div className="orbit orbit--two"/>
-            <div className="phone-card">
-              <div className="phone-top"><BrandMark compact/><span>9:41</span></div>
-              <div className="phone-greeting"><small>Mirë se vini</small><h2>Explore Kosovo</h2></div>
-              <div className="phone-search"><Icon name="search"/><span>Search places, events, food...</span></div>
-              <div className="quick-grid"><div><Icon name="compass"/><span>Places</span></div><div><Icon name="calendar"/><span>Events</span></div><div><Icon name="pin"/><span>Nearby</span></div><div><Icon name="heart"/><span>Saved</span></div></div>
-              <div className="phone-section-title"><strong>Featured now</strong><span>See all</span></div>
-              <div className="feature-preview"><div><small>PRIZREN</small><strong>Culture around every corner</strong></div></div>
-              <div className="phone-nav"><span className="active">⌂<small>Home</small></span><span>⌕<small>Discover</small></span><span>♡<small>Saved</small></span><span>○<small>Profile</small></span></div>
-            </div>
-            <div className="floating-note note-one"><Icon name="calendar"/><span><small>Plan tonight</small><strong>See what is on</strong></span></div>
-            <div className="floating-note note-two"><Icon name="pin"/><span><small>Explore nearby</small><strong>Local favourites</strong></span></div>
-          </div>
-        </section>
-
-        <section className="discover-section" id="discover"><div className="section-wrap">
-          <div className="section-heading"><div><span className="section-kicker">Discover Kosovo your way</span><h2>Whatever you feel like doing,<br/>start here.</h2></div><p>Real places, current happenings and useful local recommendations brought together in one clean experience.</p></div>
-          <div className="category-tabs" role="tablist">{categories.map((category) => <button key={category} className={activeCategory === category ? "active" : ""} onClick={() => setActiveCategory(category)}>{category}</button>)}</div>
-          <div className="discovery-grid">{activeCards.map((item) => <article className="discovery-card" key={item.title}><div className={`card-visual tone-${item.tone}`}><span>{item.city}</span><b>{item.title.charAt(0)}</b></div><div className="card-content"><div><small>{item.city}</small><h3>{item.title}</h3><p>{item.meta}</p></div><span className="card-badge">{item.badge}</span></div></article>)}</div>
-        </div></section>
-
-        <section className="cities-section section-wrap" id="cities">
-          <div className="section-heading compact"><div><span className="section-kicker">Explore by city</span><h2>Find your next stop.</h2></div><p>From lively capital streets to mountain gateways and historic old towns.</p></div>
-          <div className="city-marquee">{cities.map((city, index) => <div key={city} className={`city-tile city-${index + 1}`}><span>0{index + 1}</span><strong>{city}</strong><small>Open guide <Icon name="arrow"/></small></div>)}</div>
-        </section>
-
-        <section className="about-section" id="about"><div className="section-wrap about-grid">
-          <div><span className="section-kicker">Why KosovaGo</span><h2>Less searching.<br/>More experiencing.</h2><p>KosovaGo is being built as the practical local companion Kosovo deserves—clear, current and useful whether you live here or just landed.</p></div>
-          <div className="benefit-list"><div><span>01</span><div><h3>Current, not forgotten</h3><p>Useful listings designed to stay relevant, particularly for events and nightlife.</p></div></div><div><span>02</span><div><h3>Local knowledge</h3><p>Discover the places and experiences that generic travel guides miss.</p></div></div><div><span>03</span><div><h3>Plan it your way</h3><p>Save favourites and build a Kosovo trip around what actually interests you.</p></div></div></div>
-        </div></section>
-
-        <section className="waitlist-section section-wrap" id="waitlist"><div className="waitlist-card">
-          <div className="waitlist-copy"><BrandMark/><span className="section-kicker">Coming to mobile</span><h2>Be first to explore<br/>Kosovo differently.</h2><p>Join the early-access list for launch news and first access.</p></div>
-          <form className="waitlist-form" onSubmit={handleSubmit}><label htmlFor="waitlist-email">Email address</label><div><input id="waitlist-email" type="email" required autoComplete="email" value={email} onChange={(event) => { setEmail(event.target.value); if (status !== "idle") setStatus("idle"); }} placeholder="you@email.com"/><button type="submit" disabled={status === "loading"}>{status === "loading" ? "Joining..." : status === "sent" ? "You're on the list" : "Join waitlist"}</button></div>{status === "sent" && <p className="form-message success">You’re in—check your inbox for confirmation.</p>}{status === "error" && <p className="form-message error">That didn’t go through. Please try again.</p>}<small>Only KosovaGo updates. No spam.</small></form>
-        </div></section>
-      </main>
-
-      <footer className="footer section-wrap"><a href="#top" className="wordmark"><BrandMark compact/><span>KosovaGo</span></a><p>Discover Kosovo like a local.</p><div><a href="/privacy.html">Privacy</a><a href="mailto:gokosova@outlook.com">Contact</a><span>© {new Date().getFullYear()} KosovaGo</span></div></footer>
-    </div>
-  );
-}
+const cities=[
+  ["prishtina","Prishtina","Central Kosovo","Coffee culture, contemporary art, live music and landmark architecture.",["NEWBORN Monument","National Library","Gërmia Park"]],
+  ["prizren","Prizren","Southern Kosovo","A riverside old town where Ottoman heritage, cinema and the Sharr Mountains meet.",["Prizren Fortress","Stone Bridge","League of Prizren"]],
+  ["peja","Peja","Western Kosovo","The gateway to Rugova: dramatic mountains, heritage and outdoor adventure.",["Rugova Gorge","Patriarchate of Peć","White Drin waterfall"]],
+  ["gjakova","Gjakova","Western Kosovo","A warm, walkable city built around Kosovo's most atmospheric historic bazaar.",["Çarshia e Madhe","Hadum Mosque","Ethnographic Museum"]],
+  ["mitrovica","Mitrovica","Northern Kosovo","A music-loving city with industrial heritage, riverside life and a distinctive story.",["Miners' Monument","Ibar promenade","City Museum"]],
+  ["gjilan","Gjilan","Eastern Kosovo","A lively eastern hub known for theatre, welcoming cafés and nearby countryside.",["City Theatre","City Museum","Bresalci countryside"]],
+  ["ferizaj","Ferizaj","Southern Kosovo","Street art, youthful energy and an unusual shared religious landmark.",["Mural Fest","City centre","Nerodime bifurcation"]],
+  ["suhareka","Suhareka","Southern Kosovo","A relaxed base for vineyards, Sharr foothills and local food.",["Sharr foothills","Theranda Museum","Local wineries"]],
+  ["vushtrri","Vushtrri","Northern Kosovo","One of Kosovo's oldest towns, with a compact collection of stone-built heritage.",["Vushtrri Castle","Old Stone Bridge","Historic Hamam"]],
+  ["malisheva","Malisheva","Central Kosovo","A starting point for waterfalls, caves and quieter countryside experiences.",["Mirusha Waterfalls","Fllad Cave","Countryside trails"]]
+].map(([id,name,region,intro,highlights])=>({id,name,region,intro,highlights}));
+const extra={
+  concert:"https://images.unsplash.com/photo-1501386761578-eac5c94b800a?auto=format&fit=crop&w=1400&q=80",
+  museum:"https://images.unsplash.com/photo-1564399579883-451a5d44ec08?auto=format&fit=crop&w=1400&q=80",
+  food:"https://images.unsplash.com/photo-1414235077428-338989a2e8c0?auto=format&fit=crop&w=1400&q=80",
+  cafe:"https://images.unsplash.com/photo-1445116572660-236099ec97a0?auto=format&fit=crop&w=1400&q=80",
+  bar:"https://images.unsplash.com/photo-1516997121675-4c2d1684aa3e?auto=format&fit=crop&w=1400&q=80",
+  club:"https://images.unsplash.com/photo-1566737236500-c8ac43014a8e?auto=format&fit=crop&w=1400&q=80",
+  cinema:"https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=1400&q=80"
+};
+const raw=[
+["Events","Festival","prizren","DokuFest 2026 — 25th Edition","7–15 Aug 2026","Prizren historic centre","Kosovo's international documentary and short film festival fills cinemas and open-air venues across Prizren.",photos.prizren,"https://dokufest.com/"],
+["Events","Cinema & culture","prizren","Lumbardhi Cinema programme","Programme varies","Lumbardhi Cinema","Screenings, talks, exhibitions and community events in Prizren's landmark cultural cinema.",photos.prizren,"https://lumbardhi.org/"],
+["Events","Animation festival","peja","Anibar Animation Festival","Annual programme","Peja","Kosovo's international animation festival pairs screenings with workshops, music and public events.",photos.peja,"https://anibar.org/"],
+["Events","Theatre","prishtina","National Theatre programme","Weekly performances","National Theatre of Kosovo","Drama, premieres and visiting productions in central Prishtina. Check the organiser for the latest programme.",photos.prishtina],
+["Events","Concerts","prishtina","Live music in Prishtina","This week","Venues across the city","Current concert, DJ and live-band programmes from the capital's main venues.",extra.concert,"https://www.google.com/search?q=Prishtina+concerts+this+week"],
+["Events","Live music","mitrovica","Mitrovica live programme","Programme varies","7 Arte and city venues","Concerts, workshops and cultural events from one of Kosovo's strongest music communities.",extra.concert,"https://www.google.com/search?q=7+Arte+Mitrovica+events"],
+["Culture","Monument","prishtina","NEWBORN Monument","","Luan Haradinaj","The landmark unveiled at Kosovo's declaration of independence, repainted with a new theme over time.",photos.prishtina],
+["Culture","Architecture","prishtina","National Library of Kosovo","","Prishtina","One of Kosovo's most recognisable buildings, famous for its domes and metal lattice exterior.",extra.museum],
+["Culture","Museum","prishtina","Kosovo Museum","","Prishtina","Archaeological and historical collections housed in an Austro-Hungarian-era building.",extra.museum],
+["Culture","Museum","prishtina","Ethnological Museum — Emin Gjiku","","Old Prishtina","A traditional Ottoman-era complex presenting domestic life, crafts and cultural heritage.",extra.museum],
+["Culture","Historic site","prizren","Prizren Fortress","","Above the old town","Climb above the city for wide views across tiled roofs, the river and Sharr Mountains.",photos.prizren],
+["Culture","Monument","prizren","Stone Bridge","","Prizren old town","The compact Ottoman bridge at the heart of Prizren's riverfront pedestrian district.",photos.prizren],
+["Culture","Museum","prizren","Albanian League of Prizren","","Shadërvan district","A museum complex dedicated to the political and cultural history of the League of Prizren.",photos.prizren],
+["Culture","Historic district","gjakova","Çarshia e Madhe","","Gjakova old town","A restored bazaar of timber-fronted shops, cafés, makers and evening terraces.",photos.gjakova],
+["Culture","Castle","vushtrri","Vushtrri Castle","","Vushtrri centre","A compact medieval fortress embedded in the modern town centre.",photos.vushtrri],
+["Culture","Monument","mitrovica","Miners' Monument","","Mitrovica","Bogdan Bogdanović's monumental hilltop memorial overlooking the city.",photos.mitrovica],
+["Culture","Public art","ferizaj","Mural Fest street art","","Across Ferizaj","Large-scale murals by local and international artists spread throughout the city.",photos.ferizaj],
+["Activities","Nature","peja","Rugova Gorge","","West of Peja","A dramatic limestone gorge with scenic drives, hiking routes, caves and adventure activities.",photos.peja],
+["Activities","Adventure","peja","Via Ferrata Ari","","Rugova","A guided protected climbing route above Rugova for visitors seeking an active day out.",photos.peja],
+["Activities","Park","prishtina","Gërmia Park","","Northeast Prishtina","The capital's green escape for walking, cycling, picnics and its seasonal outdoor pool.",photos.ferizaj],
+["Activities","Waterfalls","malisheva","Mirusha Waterfalls","","Mirusha canyon","A chain of waterfalls and pools reached by a short canyon walk; conditions vary by season.",photos.malisheva],
+["Activities","Mountains","suhareka","Sharr mountain day trip","","Sharr Mountains","Mountain scenery, hiking and winter activities within reach of southern Kosovo.",photos.suhareka],
+["Activities","Nature","ferizaj","Nerodime river bifurcation","","Near Ferizaj","A rare hydrological site and easy countryside stop outside the city.",photos.ferizaj],
+["Food","Restaurant & bar","prishtina","Soma Book Station","","Prishtina","A well-known social spot combining food, drinks, books, music and a leafy courtyard.",extra.cafe],
+["Food","Café","prishtina","Dit' e Nat'","","Prishtina","Long-running café and bookshop known for coffee, casual food and cultural atmosphere.",extra.cafe],
+["Food","Traditional","prishtina","Liburnia","","Prishtina","Traditional Kosovo cooking in a characterful, plant-filled interior near the old city.",extra.food],
+["Food","Restaurant district","prizren","Riverside dining in Shadërvan","","Prizren","Busy terraces beside the Lumbardhi serving grills, local dishes, coffee and desserts.",photos.prizren],
+["Food","Traditional","peja","Kulla e Zenel Beut","","Peja","Traditional dishes served in a stone kulla-style setting close to central Peja.",extra.food],
+["Food","Café district","gjakova","Old Bazaar cafés","","Çarshia e Madhe","Coffee, breakfast and evening dining along the bazaar's lively pedestrian lanes.",photos.gjakova],
+["Nightlife","Club","prishtina","ZONE Club","","Prishtina","A major nightlife venue hosting electronic music and visiting DJs. Check the current programme.",extra.club],
+["Nightlife","Bar","prishtina","Servis Fantazia","","Prishtina","Cocktails, music and a creative crowd in one of the capital's distinctive late-night spaces.",extra.bar],
+["Nightlife","Bars","prizren","Shadërvan after dark","","Prizren","A walkable mix of riverfront bars, terraces and live music beneath the fortress.",photos.prizren],
+["Nightlife","Bars","gjakova","Çarshia e Madhe nights","","Gjakova","The old bazaar shifts from daytime coffee to busy bars, food and music after sunset.",photos.gjakova],
+["Nightlife","Live music","mitrovica","Mitrovica music nights","","Mitrovica","Gigs, alternative music and cultural nights around the city.",extra.concert],
+["Cinemas","Cinema","prishtina","Cineplexx Prishtina","","Albi Mall","Multiplex cinema showing current international and regional releases.",extra.cinema,"https://www.cineplexx-ks.eu/"],
+["Cinemas","Cinema","prizren","Cineplexx Prizren","","Galeria Shopping Mall","Modern multiplex for mainstream releases alongside Prizren's independent film culture.",extra.cinema,"https://www.cineplexx-ks.eu/"]
+];
+const items=raw.map((x,i)=>({id:"item-"+i,type:x[0],subtype:x[1],city:x[2],title:x[3],date:x[4],place:x[5],description:x[6],image:x[7],link:x[8]}));
+const nav=["Discover","Cities","Events","Food","Nightlife","Culture","Activities"];
+const meta={Cities:["Explore every city","Choose a city, then move between food, culture, nightlife, events and nearby escapes."],Events:["What's happening","Festivals, concerts, cinema and cultural programmes with organiser links where available."],Food:["Eat like a local","Restaurants, cafés, traditional cooking and neighbourhoods worth arriving hungry for."],Nightlife:["Kosovo after dark","Clubs, bars, live music and city districts—with programme checks before you head out."],Culture:["History, art & culture","Monuments, museums, galleries, architecture and the stories behind Kosovo's cities."],Activities:["Go beyond the city","Hikes, waterfalls, parks, climbing and day trips for a more active Kosovo."],Cinemas:["Cinema guide","Multiplex listings, independent venues and festival screenings across Kosovo."]};
+function Icon({name}){const p={search:<><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></>,pin:<><path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></>,calendar:<><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></>,heart:<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l8.9 8.6 8.8-8.6a5.5 5.5 0 0 0 0-7.8Z"/>,arrow:<><path d="M5 12h14M13 6l6 6-6 6"/></>,close:<><path d="M6 6l12 12M18 6 6 18"/></>,menu:<><path d="M4 7h16M4 12h16M4 17h16"/></>};return <svg viewBox="0 0 24 24" aria-hidden="true">{p[name]}</svg>}
+function Card({item,open,saved,save}){const city=cities.find(c=>c.id===item.city);return <article className="listing-card" onClick={()=>open(item)}><div className="listing-image"><img src={item.image} alt="" loading="lazy" onError={e=>e.currentTarget.src=shot}/><span className="type-pill">{item.subtype}</span><button className={saved?"save active":"save"} onClick={e=>{e.stopPropagation();save(item.id)}}><Icon name="heart"/></button></div><div className="listing-copy"><small>{city?.name}</small><h3>{item.title}</h3><p>{item.description}</p><div className="listing-meta"><span><Icon name={item.date?"calendar":"pin"}/>{item.date||item.place}</span><b>View <Icon name="arrow"/></b></div></div></article>}
+function Header({page,setPage,search,saved}){const[open,setOpen]=useState(false);return <header className="topbar"><button className="brand" onClick={()=>setPage("Discover")}><img src="/favicon.ico"/><span>KosovaGo</span></button><nav className={open?"open":""}>{nav.map(n=><button key={n} className={page===n?"active":""} onClick={()=>{setPage(n);setOpen(false)}}>{n}</button>)}</nav><div className="top-actions"><button className="search-btn" onClick={search}><Icon name="search"/><span>Search</span></button><span className="saved-chip">♡ {saved}</span><button className="hamburger" onClick={()=>setOpen(!open)}><Icon name={open?"close":"menu"}/></button></div></header>}
+function SectionTitle({icon="✣",title,action,onAction}){return <div className="section-title"><div><span>{icon}</span><h2>{title}</h2></div>{action&&<button onClick={onAction}>{action}<Icon name="arrow"/></button>}</div>}
+function Home({setPage,setCity,open,saved,save,search}){return <><section className="home-hero"><div className="home-copy"><span>Welcome to</span><h1>Kosovo</h1><p>Discover the heart of the Balkans</p><div><button className="gold-button" onClick={()=>setPage("Cities")}>Explore cities <Icon name="arrow"/></button><button className="ghost-button" onClick={search}><Icon name="search"/>Search everything</button></div></div><div className="app-preview"><img src={shot}/><b>Your app. Now useful on the web too.</b></div></section><section className="content-section"><SectionTitle title="Featured Events" action="See all" onAction={()=>setPage("Events")}/><div className="featured-grid">{items.filter(x=>x.type==="Events").slice(0,3).map(i=><Card key={i.id} item={i} open={open} saved={saved.includes(i.id)} save={save}/>)}</div></section><section className="content-section"><SectionTitle icon="⌖" title="Explore the Cities" action="All cities" onAction={()=>setPage("Cities")}/><div className="city-grid">{cities.slice(0,8).map(c=><button className="city-card" key={c.id} onClick={()=>setCity(c)}><img src={photos[c.id]} onError={e=>e.currentTarget.src=shot}/><div><h3>{c.name}</h3><p>{c.region}</p><span>Open guide <Icon name="arrow"/></span></div></button>)}</div></section><section className="category-band">{["Food","Nightlife","Culture","Activities","Cinemas"].map((x,i)=><button key={x} onClick={()=>setPage(x)}><span>0{i+1}</span><h3>{x}</h3><p>{meta[x][1]}</p><b>Browse <Icon name="arrow"/></b></button>)}</section></>}
+function PageHero({page}){const m=meta[page]||["Discover Kosovo","Real places and useful local picks."];return <section className="page-hero"><span>KosovaGo guide</span><h1>{m[0]}</h1><p>{m[1]}</p></section>}
+function Browse({page,setCity,open,saved,save}){const[filter,setFilter]=useState("all");const data=useMemo(()=>items.filter(x=>x.type===page&&(filter==="all"||x.city===filter)),[page,filter]);if(page==="Cities")return <><PageHero page={page}/><section className="content-section"><div className="all-city-grid">{cities.map(c=><button className="city-guide" onClick={()=>setCity(c)} key={c.id}><img src={photos[c.id]} onError={e=>e.currentTarget.src=shot}/><div><span>{c.region}</span><h2>{c.name}</h2><p>{c.intro}</p><b>Open city guide <Icon name="arrow"/></b></div></button>)}</div></section></>;return <><PageHero page={page}/><section className="content-section"><div className="filter-row"><button className={filter==="all"?"active":""} onClick={()=>setFilter("all")}>All Kosovo</button>{cities.map(c=><button key={c.id} className={filter===c.id?"active":""} onClick={()=>setFilter(c.id)}>{c.name}</button>)}</div>{data.length?<div className="listing-grid">{data.map(i=><Card key={i.id} item={i} open={open} saved={saved.includes(i.id)} save={save}/>)}</div>:<div className="empty-state"><h2>More verified listings are being added.</h2><p>No made-up filler just to make the grid look busy.</p></div>}</section></>}
+function City({city,back,open,saved,save}){const data=items.filter(x=>x.city===city.id);return <><section className="city-hero"><img src={photos[city.id]}/><div><button onClick={back}>← All cities</button><span>{city.region}</span><h1>{city.name}</h1><p>{city.intro}</p></div></section><section className="content-section"><div className="city-highlights">{city.highlights.map((x,i)=><div key={x}><span>0{i+1}</span><b>{x}</b></div>)}</div><SectionTitle title={"Explore "+city.name}/>{data.length?<div className="listing-grid">{data.map(i=><Card key={i.id} item={i} open={open} saved={saved.includes(i.id)} save={save}/>)}</div>:<div className="empty-state"><h2>Detailed listings are being verified.</h2><p>The city essentials above are live.</p></div>}</section></>}
+function Search({close,open}){const[q,setQ]=useState("");const r=q.length<2?[]:items.filter(x=>(x.title+" "+x.description+" "+x.type+" "+x.place).toLowerCase().includes(q.toLowerCase())).slice(0,10);return <div className="modal-backdrop" onMouseDown={close}><div className="search-modal" onMouseDown={e=>e.stopPropagation()}><div className="search-box"><Icon name="search"/><input autoFocus placeholder="Search events, restaurants, museums…" value={q} onChange={e=>setQ(e.target.value)}/><button onClick={close}><Icon name="close"/></button></div><div className="search-results">{q.length<2?<p>Try “museum”, “Prizren”, “concert” or “Rugova”.</p>:r.length?r.map(x=><button key={x.id} onClick={()=>{close();open(x)}}><img src={x.image}/><span><small>{x.type} · {cities.find(c=>c.id===x.city)?.name}</small><b>{x.title}</b><em>{x.place}</em></span><Icon name="arrow"/></button>):<p>No match yet. Try another place or category.</p>}</div></div></div>}
+function Detail({item,close,saved,save}){const c=cities.find(x=>x.id===item.city),maps="https://www.google.com/maps/search/?api=1&query="+encodeURIComponent(item.title+" "+c?.name);return <div className="modal-backdrop detail-backdrop" onMouseDown={close}><article className="detail-modal" onMouseDown={e=>e.stopPropagation()}><button className="detail-close" onClick={close}><Icon name="close"/></button><img className="detail-image" src={item.image}/><div className="detail-content"><span className="type-pill">{item.subtype}</span><small>{c?.name} · {item.type}</small><h2>{item.title}</h2><p>{item.description}</p>{item.date&&<div className="detail-line"><Icon name="calendar"/><span><b>{item.date}</b><small>{item.place}</small></span></div>}<div className="detail-actions"><a href={maps} target="_blank">Open in Maps <Icon name="arrow"/></a>{item.link&&<a className="secondary" href={item.link} target="_blank">Official programme</a>}<button className={saved?"active":""} onClick={()=>save(item.id)}><Icon name="heart"/>{saved?"Saved":"Save"}</button></div><p className="accuracy-note">Programmes and opening times can change. Check the venue or organiser before travelling.</p></div></article></div>}
+export default function App(){const[page,setP]=useState("Discover"),[city,setC]=useState(null),[detail,setDetail]=useState(null),[search,setSearch]=useState(false),[saved,setSaved]=useState(()=>{try{return JSON.parse(localStorage.getItem("kg-saved"))||[]}catch{return[]}});const setPage=p=>{setP(p);setC(null);scrollTo(0,0);location.hash=p.toLowerCase()},setCity=c=>{setC(c);scrollTo(0,0);location.hash="city/"+c.id},save=id=>setSaved(s=>s.includes(id)?s.filter(x=>x!==id):[...s,id]);useEffect(()=>localStorage.setItem("kg-saved",JSON.stringify(saved)),[saved]);return <div className="app-shell"><Header page={page} setPage={setPage} search={()=>setSearch(true)} saved={saved.length}/><main>{city?<City city={city} back={()=>setPage("Cities")} open={setDetail} saved={saved} save={save}/>:page==="Discover"?<Home setPage={setPage} setCity={setCity} open={setDetail} saved={saved} save={save} search={()=>setSearch(true)}/>:<Browse page={page} setCity={setCity} open={setDetail} saved={saved} save={save}/>}</main><footer><button className="brand" onClick={()=>setPage("Discover")}><img src="/favicon.ico"/><span>KosovaGo</span></button><p>Discover the heart of the Balkans.</p><div><a href="/privacy.html">Privacy</a><a href="mailto:gokosova@outlook.com">Contact</a><span>© {new Date().getFullYear()}</span></div></footer>{search&&<Search close={()=>setSearch(false)} open={setDetail}/>} {detail&&<Detail item={detail} close={()=>setDetail(null)} saved={saved.includes(detail.id)} save={save}/>}</div>}
