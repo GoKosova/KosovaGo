@@ -12,3 +12,4 @@
 .search-results .fallback-art{width:66px;height:55px;border-radius:9px}.search-results .fallback-art span{font-size:1.5rem}.search-results .fallback-art b{display:none}
 .detail-image .fallback-art{min-height:520px}.detail-image .fallback-art span{font-size:7rem}
 @media(max-width:700px){.app-preview{height:550px}.app-preview img{width:250px;height:500px;border-radius:42px}.app-preview:before{top:35px;width:82px;height:21px}.app-preview:after{width:290px;height:520px}.app-preview b{bottom:-25px;font-size:.7rem}.detail-image .fallback-art{min-height:300px}}
+.city-category-tabs{margin-bottom:28px}.city-category-tabs button{display:flex;align-items:center;gap:8px}.city-category-tabs button small{min-width:20px;height:20px;padding:0 5px;border-radius:999px;display:grid;place-items:center;background:rgba(255,255,255,.08);font-size:.6rem}.city-category-tabs button.active small{background:rgba(3,16,32,.18)}
