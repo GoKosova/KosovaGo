@@ -3,7 +3,6 @@ import "./index.css";
 
 export default function KosovaGoLandingPage() {
   const [email, setEmail] = useState("");
-  const [submitted, setSubmitted] = useState(false);
   const [status, setStatus] = useState("idle");
 
   const highlights = [
@@ -35,46 +34,40 @@ export default function KosovaGoLandingPage() {
 
   const featuredCities = ["Prishtina", "Prizren", "Peja", "Gjakova"];
 
-  const handleSubmit = async () => {
-    if (!email) return;
+  const sendEmail = async (templateId, userEmail) => {
+    const response = await fetch("https://api.emailjs.com/api/v1.0/email/send", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        service_id: "service_8m7b6ng",
+        template_id: templateId,
+        user_id: "9_B6qxEZcglmkiKlb",
+        template_params: {
+          user_email: userEmail,
+        },
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`EmailJS error: ${errorText}`);
+    }
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+
+    const normalizedEmail = email.trim();
+    if (!normalizedEmail || status === "sending") return;
+
+    setStatus("sending");
 
     try {
-      const notifyResponse = await fetch("https://api.emailjs.com/api/v1.0/email/send", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          service_id: "service_8m7b6ng",
-          template_id: "template_v9e7z3r",
-          user_id: "9_B6qxEZcglmkiKlb",
-          template_params: {
-            user_email: email,
-          },
-        }),
-      });
+      await sendEmail("template_v9e7z3r", normalizedEmail);
+      await sendEmail("template_sqphrdq", normalizedEmail);
 
-      if (!notifyResponse.ok) {
-        const errorText = await notifyResponse.text();
-        throw new Error(`EmailJS error: ${errorText}`);
-      }
-
-      await fetch("https://api.emailjs.com/api/v1.0/email/send", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          service_id: "service_8m7b6ng",
-          template_id: "template_sqphrdq",
-          user_id: "9_B6qxEZcglmkiKlb",
-          template_params: {
-            user_email: email,
-          },
-        }),
-      });
-
-      setSubmitted(true);
       setEmail("");
       setStatus("sent");
     } catch (error) {
@@ -172,12 +165,6 @@ export default function KosovaGoLandingPage() {
                   </div>
                 </div>
               </div>
-              {status === "sent" && (
-                <p className="mt-4 text-emerald-400">Signup sent! Check your inbox/spam.</p>
-              )}
-              {status === "error" && (
-                <p className="mt-4 text-red-400">Failed to send. Check console for details.</p>
-              )}
             </div>
           </div>
         </div>
@@ -220,20 +207,43 @@ export default function KosovaGoLandingPage() {
               Launching soon on mobile
             </h2>
 
-            <div className="mt-8 flex flex-col gap-4 sm:flex-row">
+            <form
+              className="mt-8 flex flex-col gap-4 sm:flex-row"
+              onSubmit={handleSubmit}
+            >
               <input
                 type="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (status === "sent" || status === "error") setStatus("idle");
+                }}
                 placeholder="Enter your email"
-                className="w-full rounded-2xl border border-white/10 bg-slate-950/70 px-5 py-4 text-white placeholder:text-slate-500 outline-none"
+                aria-label="Email address"
+                required
+                disabled={status === "sending"}
+                className="w-full rounded-2xl border border-white/10 bg-slate-950/70 px-5 py-4 text-white placeholder:text-slate-500 outline-none disabled:cursor-not-allowed disabled:opacity-60"
               />
               <button
-                onClick={handleSubmit}
-                className="rounded-2xl bg-white px-6 py-4 font-semibold text-slate-900 transition hover:scale-[1.02]"
+                type="submit"
+                disabled={status === "sending"}
+                className="rounded-2xl bg-white px-6 py-4 font-semibold text-slate-900 transition hover:scale-[1.02] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:scale-100"
               >
-                {submitted ? "Added ✅" : "Notify me"}
+                {status === "sending"
+                  ? "Sending..."
+                  : status === "sent"
+                    ? "Added ✅"
+                    : "Notify me"}
               </button>
+            </form>
+
+            <div className="mt-4 min-h-5" aria-live="polite">
+              {status === "sent" && (
+                <p className="text-emerald-400">Signup sent! Check your inbox/spam.</p>
+              )}
+              {status === "error" && (
+                <p className="text-red-400">Failed to send. Please try again.</p>
+              )}
             </div>
           </div>
         </div>
